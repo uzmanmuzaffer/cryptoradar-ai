@@ -1,5 +1,3 @@
-import axios from "axios";
-
 const BASE_URL = "https://api.coingecko.com/api/v3";
 
 // Ana sayfadaki coin listesi
@@ -17,6 +15,23 @@ export async function getMarketData() {
   } catch (error) {
     console.error("getMarketData hatası:", error);
     return [];
+  }
+}
+
+// Global piyasa istatistikleri
+export async function getGlobalData() {
+  try {
+    const response = await fetch(`${BASE_URL}/global`);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.data;
+  } catch (error) {
+    console.error("getGlobalData hatası:", error);
+    return null;
   }
 }
 
