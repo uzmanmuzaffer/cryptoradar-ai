@@ -7,33 +7,76 @@ function CoinList() {
   const [coins, setCoins] = useState([]);
   const [filteredCoins, setFilteredCoins] = useState([]);
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState("marketcap");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadCoins() {
-      const data = await getMarketData();
-      setCoins(data);
-      setFilteredCoins(data);
-      setLoading(false);
+      try {
+        console.log("🚀 loadCoins başladı");
+
+        const data = await getMarketData();
+
+        console.log("📦 API'den gelen veri:", data);
+
+        setCoins(data);
+        setFilteredCoins(data);
+      } catch (error) {
+        console.error("❌ Coin verileri alınamadı:", error);
+      } finally {
+        setLoading(false);
+      }
     }
 
     loadCoins();
   }, []);
 
   useEffect(() => {
-    const filtered = coins.filter(
+    let filtered = coins.filter(
       (coin) =>
         coin.name.toLowerCase().includes(search.toLowerCase()) ||
         coin.symbol.toLowerCase().includes(search.toLowerCase())
     );
 
+    switch (sortBy) {
+      case "price":
+        filtered.sort((a, b) => b.current_price - a.current_price);
+        break;
+
+      case "gainers":
+        filtered.sort(
+          (a, b) =>
+            b.price_change_percentage_24h - a.price_change_percentage_24h
+        );
+        break;
+
+      case "losers":
+        filtered.sort(
+          (a, b) =>
+            a.price_change_percentage_24h - b.price_change_percentage_24h
+        );
+        break;
+
+      default:
+        filtered.sort((a, b) => b.market_cap - a.market_cap);
+        break;
+    }
+
     setFilteredCoins(filtered);
-  }, [search, coins]);
+  }, [search, coins, sortBy]);
 
   if (loading) {
     return (
       <div className="text-white text-center py-10">
         Coin verileri yükleniyor...
+      </div>
+    );
+  }
+
+  if (filteredCoins.length === 0) {
+    return (
+      <div className="text-center text-red-400 py-10">
+        Hiç coin bulunamadı veya API'den veri gelmedi.
       </div>
     );
   }
@@ -44,7 +87,12 @@ function CoinList() {
         📈 Canlı Piyasalar
       </h2>
 
-      <SearchBar search={search} setSearch={setSearch} />
+      <SearchBar
+        search={search}
+        setSearch={setSearch}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+      />
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
         {filteredCoins.map((coin) => (
